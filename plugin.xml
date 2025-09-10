@@ -105,7 +105,7 @@
                     android:resource="@xml/file_paths" />
             </provider>
         </config-file>
-        <resource-file src="src/android/res/xml/file_paths.xml" target="res/xml/file_paths.xml" />
+        <resource-file src="src/android/res/xml/file_paths.xml" target="app/src/main/res/xml/file_paths.xml" />
 
 
         <framework src="androidx.legacy:legacy-support-v4:1.0.0" />
