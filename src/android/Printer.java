@@ -57,7 +57,7 @@ public class Printer extends CordovaPlugin {
             try{
             Uri fileUri = FileProvider.getUriForFile(
                 cordova.getActivity(),
-                cordova.getActivity().getPackageName() + ".fileprovider",
+                cordova.getActivity().getPackageName() + ".printer.fileprovider",
                 file
             );
            
