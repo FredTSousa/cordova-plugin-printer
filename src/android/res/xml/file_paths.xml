@@ -1,0 +1,4 @@
+<paths>
+    <!-- Allow temporary files from cache to be shared via content:// -->
+    <cache-path name="cache" path="." />
+</paths>
