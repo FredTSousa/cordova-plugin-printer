@@ -34,7 +34,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
+import androidx.core.content.FileProvider;
 import android.net.Uri;
 import android.util.Base64;
 /**
