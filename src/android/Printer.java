@@ -1,176 +1,91 @@
-/*
- Copyright 2013 Sebastián Katzer
-
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
- */
-
 package de.appplant.cordova.plugin.printer;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.webkit.WebView;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.util.Base64;
+import android.util.Log;
+
+import androidx.core.content.FileProvider;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
-import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import androidx.core.content.FileProvider;
-import android.net.Uri;
-import android.util.Base64;
-/**
- * Plugin to print HTML documents. Therefore it creates an invisible web view
- * that loads the markup data. Once the page has been fully rendered it takes
- * the print adapter of that web view and initializes a print job.
- */
-public final class Printer extends CordovaPlugin
-{
-    /**
-     * Executes the request.
-     *
-     * This method is called from the WebView thread.
-     * To do a non-trivial amount of work, use:
-     *     cordova.getThreadPool().execute(runnable);
-     *
-     * To run on the UI thread, use:
-     *     cordova.getActivity().runOnUiThread(runnable);
-     *
-     * @param action   The action to execute.
-     * @param args     The exec() arguments in JSON form.
-     * @param callback The callback context used when calling back into JavaScript.
-     *
-     * @return         Whether the action was valid.
-     */
+
+public class Printer extends CordovaPlugin {
+
+    private static final String TAG = "Printer";
+
     @Override
-    public boolean execute (String action, JSONArray args,
-                            CallbackContext callback)
-    {
-        boolean valid = true;
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        if ("print".equals(action)) {
+            JSONObject settings = args.optJSONObject(1);
+            String content = args.getString(0);
 
-        if (action.equalsIgnoreCase("check"))
-        {
-            check(args.optString(0), callback);
+            // Detect if content is base64
+            if (content.startsWith("data:application/pdf;base64,")) {
+                content = content.replaceFirst("data:application/pdf;base64,", "");
+                printBase64(content, settings, callbackContext);
+            } else {
+                print(content, settings, callbackContext);
+            }
+            return true;
         }
-        else if (action.equalsIgnoreCase("types"))
-        {
-            types(callback);
-        }
-        else if (action.equalsIgnoreCase("print"))
-        {
-            print(args.optString(0), args.optJSONObject(1), callback);
-        }
-        else {
-            valid = false;
-        }
-
-        return valid;
+        return false;
     }
 
-    /**
-     * If the print framework is able to render the referenced file.
-     *
-     * @param item     Any kind of URL like file://, file:///, res:// or base64://
-     * @param callback The plugin function to invoke with the result.
-     */
-    private void check (@Nullable String item, CallbackContext callback)
-    {
-        cordova.getThreadPool().execute(() -> {
-            PrintManager pm   = new PrintManager(cordova.getContext());
-            boolean printable = pm.canPrintItem(item);
-
-            sendPluginResult(callback, printable);
-        });
+    private void print(String url, JSONObject settings, CallbackContext callbackContext) {
+        printJob(url, settings, callbackContext);
     }
 
-    /**
-     * List of all printable document types (utis).
-     *
-     * @param callback The plugin function to invoke with the result.
-     */
-    private void types (CallbackContext callback)
-    {
-        cordova.getThreadPool().execute(() -> {
-            JSONArray utis = PrintManager.getPrintableTypes();
+    private void printBase64(String base64Data, JSONObject settings, CallbackContext callbackContext) {
+        try {
+            byte[] data = Base64.decode(base64Data, Base64.DEFAULT);
+            File file = File.createTempFile("print", ".pdf", cordova.getActivity().getCacheDir());
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(data);
+            fos.close();
 
-            PluginResult res = new PluginResult(
-                    Status.OK, utis);
+            Uri fileUri = FileProvider.getUriForFile(
+                cordova.getActivity(),
+                cordova.getActivity().getPackageName() + ".fileprovider",
+                file
+            );
 
-            callback.sendPluginResult(res);
-        });
+            printJob(fileUri.toString(), settings, callbackContext);
+        } catch (Exception e) {
+            if (callbackContext != null) {
+                callbackContext.error("Failed to handle base64 input: " + e.getMessage());
+            } else {
+                Log.e(TAG, "Failed to handle base64 input: " + e.getMessage());
+            }
+        }
     }
 
-    /**
-     * Sends the provided content to the printing controller and opens
-     * them.
-     *
-     * @param content  The content or file to print.
-     * @param settings Additional settings how to render the content.
-     * @param callback The plugin function to invoke with the result.
-     */
-    private void print (String content, JSONObject settings, CallbackContext callback)
-    {
-      if (content != null && content.startsWith("base64://")) {
-          try {
-              String base64Data = content.substring("base64://".length());
-              byte[] pdfBytes = Base64.decode(base64Data, Base64.DEFAULT);
-      
-              File file = File.createTempFile("print", ".pdf", cordova.getActivity().getCacheDir());
-              FileOutputStream fos = new FileOutputStream(file);
-              fos.write(pdfBytes);
-              fos.close();
-      
-              Uri fileUri = androidx.core.content.FileProvider.getUriForFile(
-                  cordova.getActivity(),
-                  cordova.getActivity().getPackageName() + ".provider",
-                  file
-              );
-      
-              // Use settings from your fork instead of options, no jobName needed
-              printJob(fileUri.toString(), settings, callback);
-              return;
-          } catch (Exception e) {
-              callback.error("Failed to handle base64 input: " + e.getMessage());
-              return;
-          }
-      }
-        cordova.getThreadPool().execute(() -> {
-            PrintManager pm = new PrintManager(cordova.getContext());
-            WebView view    = (WebView) webView.getView();
+    private void printJob(String url, JSONObject settings, CallbackContext callbackContext) {
+        try {
+            Intent printIntent = new Intent(Intent.ACTION_VIEW);
+            printIntent.setDataAndType(Uri.parse(url), "application/pdf");
+            printIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-            pm.print(content, settings, view, (boolean completed) -> sendPluginResult(callback, completed));
-        });
-    }
+            cordova.getActivity().startActivity(printIntent);
 
-    /**
-     * Sends the result back to the client.
-     *
-     * @param callback The callback to invoke.
-     * @param value    The argument to pass with.
-     */
-    private void sendPluginResult (@NonNull CallbackContext callback,
-                                   boolean value)
-    {
-        PluginResult result = new PluginResult(Status.OK, value);
-
-        callback.sendPluginResult(result);
+            if (callbackContext != null) {
+                PluginResult result = new PluginResult(PluginResult.Status.OK);
+                callbackContext.sendPluginResult(result);
+            }
+        } catch (Exception e) {
+            if (callbackContext != null) {
+                callbackContext.error("Failed to print document: " + e.getMessage());
+            } else {
+                Log.e(TAG, "Failed to print document: " + e.getMessage());
+            }
+        }
     }
 }
