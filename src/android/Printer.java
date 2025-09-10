@@ -31,7 +31,12 @@ import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
+import android.net.Uri;
+import android.util.Base64;
 /**
  * Plugin to print HTML documents. Therefore it creates an invisible web view
  * that loads the markup data. Once the page has been fully rendered it takes
