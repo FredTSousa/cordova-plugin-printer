@@ -97,7 +97,7 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <provider
                 android:name="androidx.core.content.FileProvider"
-                android:authorities="$PACKAGE_NAME.provider"
+                android:authorities="${packageName}.provider"
                 android:exported="false"
                 android:grantUriPermissions="true">
                 <meta-data
