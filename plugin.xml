@@ -94,7 +94,7 @@
             </feature>
         </config-file>
          <!-- ✅ FileProvider support for base64:// decoding -->
-        <config-file target="AndroidManifest.xml" parent="/application">
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <provider
                 android:name="androidx.core.content.FileProvider"
                 android:authorities="$PACKAGE_NAME.provider"
