@@ -25,6 +25,7 @@ public class Printer extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if ("print".equals(action)) {
+            Log.d("PrinterPlugin", "print() called "+content);
             JSONObject settings = args.optJSONObject(1);
             String content = args.getString(0);
 
