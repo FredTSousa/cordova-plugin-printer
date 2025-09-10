@@ -95,7 +95,7 @@
         </config-file>
         <resource-file src="src/android/res/xml/file_paths.xml" target="app/src/main/res/xml/file_paths.xml" />
          <!-- ✅ FileProvider support for base64:// decoding -->
-        <edit-config target="app/src/main/AndroidManifest.xml" mode="merge" parent="/manifest/application">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <provider
                 android:name="androidx.core.content.FileProvider"
                 android:authorities="${applicationId}.provider"
