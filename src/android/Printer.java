@@ -126,8 +126,7 @@ public final class Printer extends CordovaPlugin
      * @param settings Additional settings how to render the content.
      * @param callback The plugin function to invoke with the result.
      */
-    private void print (@Nullable String content, JSONObject settings,
-                        CallbackContext callback)
+    private void print (String content, JSONObject settings, CallbackContext callback)
     {
       if (content != null && content.startsWith("base64://")) {
           try {
