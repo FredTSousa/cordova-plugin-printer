@@ -145,10 +145,10 @@ public final class Printer extends CordovaPlugin
               );
       
               // Use settings from your fork instead of options, no jobName needed
-              printJob(fileUri.toString(), settings, callbackContext);
+              printJob(fileUri.toString(), settings, callback);
               return;
           } catch (Exception e) {
-              callbackContext.error("Failed to handle base64 input: " + e.getMessage());
+              callback.error("Failed to handle base64 input: " + e.getMessage());
               return;
           }
       }
