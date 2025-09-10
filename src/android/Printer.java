@@ -129,34 +129,30 @@ public final class Printer extends CordovaPlugin
     private void print (@Nullable String content, JSONObject settings,
                         CallbackContext callback)
     {
-      if (content.startsWith("base64://")) {
-             try {
-                 String base64Data = content.substring(9); // remove "base64://"
-                 
-                 // Decode Base64 to bytes
-                 byte[] pdfAsBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
-         
-                 // Write to a temporary file (e.g., PDF)
-                 File file = File.createTempFile("print", ".pdf", cordova.getActivity().getCacheDir());
-                 FileOutputStream fos = new FileOutputStream(file);
-                 fos.write(pdfAsBytes);
-                 fos.close();
-         
-                 // Convert to Uri and pass to the Android print system
-                 Uri fileUri = androidx.core.content.FileProvider.getUriForFile(
-                         cordova.getActivity(),
-                         cordova.getActivity().getPackageName() + ".provider",
-                         file
-                 );
-         
-                 printJob(fileUri.toString(), jobName, options, callbackContext);
-                 return;
-             } catch (Exception e) {
-                 e.printStackTrace();
-                 callbackContext.error("Failed to handle base64 input: " + e.getMessage());
-                 return;
-             }
-        }
+      if (content != null && content.startsWith("base64://")) {
+          try {
+              String base64Data = content.substring("base64://".length());
+              byte[] pdfBytes = Base64.decode(base64Data, Base64.DEFAULT);
+      
+              File file = File.createTempFile("print", ".pdf", cordova.getActivity().getCacheDir());
+              FileOutputStream fos = new FileOutputStream(file);
+              fos.write(pdfBytes);
+              fos.close();
+      
+              Uri fileUri = androidx.core.content.FileProvider.getUriForFile(
+                  cordova.getActivity(),
+                  cordova.getActivity().getPackageName() + ".provider",
+                  file
+              );
+      
+              // Use settings from your fork instead of options, no jobName needed
+              printJob(fileUri.toString(), settings, callbackContext);
+              return;
+          } catch (Exception e) {
+              callbackContext.error("Failed to handle base64 input: " + e.getMessage());
+              return;
+          }
+      }
         cordova.getThreadPool().execute(() -> {
             PrintManager pm = new PrintManager(cordova.getContext());
             WebView view    = (WebView) webView.getView();
