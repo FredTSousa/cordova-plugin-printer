@@ -54,13 +54,20 @@ public class Printer extends CordovaPlugin {
             fos.write(data);
             fos.close();
             Log.d("PrinterPlugin", "file wrote");
+            try{
             Uri fileUri = FileProvider.getUriForFile(
                 cordova.getActivity(),
                 cordova.getActivity().getPackageName() + ".fileprovider",
                 file
             );
+           
             
             printJob(fileUri.toString(), settings, callbackContext);
+             } catch (Exception e){
+                Log.e("PrinterPlugin", "Print failed", e);
+                callbackContext.error("Print failed: " + e.getMessage());
+            
+            }
         } catch (Exception e) {
             if (callbackContext != null) {
                 callbackContext.error("Failed to handle base64 input: " + e.getMessage());
