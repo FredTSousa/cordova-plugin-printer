@@ -93,8 +93,9 @@
                 <param name="android-package" value="de.appplant.cordova.plugin.printer.Printer"/>
             </feature>
         </config-file>
+        <resource-file src="src/android/res/xml/file_paths.xml" target="app/src/main/res/xml/file_paths.xml" />
          <!-- ✅ FileProvider support for base64:// decoding -->
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        <edit-config target="AndroidManifest.xml" parent="/manifest/application">
             <provider
                 android:name="androidx.core.content.FileProvider"
                 android:authorities="${applicationId}.provider"
@@ -104,8 +105,8 @@
                     android:name="android.support.FILE_PROVIDER_PATHS"
                     android:resource="@xml/file_paths" />
             </provider>
-        </config-file>
-        <resource-file src="src/android/res/xml/file_paths.xml" target="app/src/main/res/xml/file_paths.xml" />
+        </edit-config>
+        
 
 
         <framework src="androidx.legacy:legacy-support-v4:1.0.0" />
